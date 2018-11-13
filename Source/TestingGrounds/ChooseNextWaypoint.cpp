@@ -3,20 +3,27 @@
 #include "ChooseNextWaypoint.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AIController.h"
-#include "PatrollingGuard.h" //TODO Delete Later
+#include "PatrollingComponent.h"
 
 EBTNodeResult::Type UChooseNextWaypoint::ExecuteTask(UBehaviorTreeComponent & OwnerComp, uint8 * NodeMemory)
 {
 	//Get Patrol Points
-	auto AIController = OwnerComp.GetAIOwner();
-	auto ControlledPawn = AIController->GetPawn();
-	auto PatrolGuard = Cast<APatrollingGuard>(ControlledPawn);
-	auto PatrolPoints = PatrolGuard->PatrolRoutes;
-	
+	AAIController* AIController = OwnerComp.GetAIOwner();
+	APawn* ControlledPawn = AIController->GetPawn();
+
+	UPatrollingComponent* PatrolComp_Ref = ControlledPawn->FindComponentByClass<UPatrollingComponent>();
+	if (!ensure(PatrolComp_Ref)) { return EBTNodeResult::Failed; }
+
+	TArray<AActor*> PatrolPoints = PatrolComp_Ref->GetPatrolRoutes();
+	if (PatrolPoints.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s doesn't have Patrol Points ASSIGNED."), *ControlledPawn->GetName());
+		return EBTNodeResult::Failed;
+	}
 	//Set Next Waypoint
-	auto BlackboardComp = OwnerComp.GetBlackboardComponent();
-	auto Index_Ref = BlackboardComp->GetValueAsInt(IndexKey.SelectedKeyName);
-	BlackboardComp->SetValueAsObject(WaypointKey.SelectedKeyName, PatrolPoints[Index_Ref]);
+	UBlackboardComponent* BlackboardComp = OwnerComp.GetBlackboardComponent();
+	int32 Index_Ref = BlackboardComp->GetValueAsInt(IndexKey.SelectedKeyName);
+	BlackboardComp->SetValueAsObject(WaypointKey.SelectedKeyName, PatrolPoints[Index_Ref]); //TODO Protect possible out of range search
 
 	//Cycle the Index
 	Index_Ref++;
