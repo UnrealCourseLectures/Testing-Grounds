@@ -17,7 +17,7 @@ EBTNodeResult::Type UChooseNextWaypoint::ExecuteTask(UBehaviorTreeComponent & Ow
 	TArray<AActor*> PatrolPoints = PatrolComp_Ref->GetPatrolRoutes();
 	if (PatrolPoints.Num() == 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%s doesn't have Patrol Points ASSIGNED."), *ControlledPawn->GetName());
+		UE_LOG(LogTemp, Error, TEXT("%s doesn't have Patrol Points ASSIGNED."), *ControlledPawn->GetName());
 		return EBTNodeResult::Failed;
 	}
 	//Set Next Waypoint
